@@ -1,15 +1,147 @@
+:root {
+  --base-font-size: 20px;
+  --system-fonts:  -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+    "Droid Sans", "Helvetica Neue", sans-serif;
+
+  --header-height: 10vh;
+
+  --padding: 1rem;
+
+  --black: rgb(0, 0, 0);
+  --white: rgb(255, 255, 255);
+  --text-grey: rgb(100, 100, 100);
+  --repo-bg-color: rgb(230, 230, 230);
+  --header-bg-color: rgb(36, 41, 46);
+}
+
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+  box-sizing: inherit;
 }
 
-html {
-  --base-font-size: 16px;
+:root {
+  box-sizing: border-box;
 
+  font-family: var(--system-fonts);
   font-size: var(--base-font-size);
+  line-height: 1.5;
 }
 
 body {
   margin: 0;
+
+  display: grid;
+  grid-template-rows: var(--header-height) auto;
+  grid-template-columns: auto;
+  grid-template-areas: "header"
+                       "main";
+}
+
+header {
+  grid-area: header;
+  position: fixed;
+  width: 100vw;
+  height: var(--header-height);
+  z-index: 1;
+  padding: 1em;
+
+  background: var(--header-bg-color);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+
+  color: var(--repo-bg-color);
+  font-weight: 300;
+}
+
+header h1 {
+  margin: 0;
+  font-weight: 300;
+}
+
+main {
+  grid-area: main;
+}
+
+.repo {
+  width: 100%;
+  display: grid;
+  justify-items: stretch;
+  align-items: stretch;
+  grid-template-columns: 3fr 1fr;
+  grid-template-rows: auto;
+  grid-template-areas: "owner version"
+                       "name version"
+                       "description version"
+                       "changelog changelog";
+
+  padding: var(--padding);
+
+  border-bottom: 1px solid var(--text-grey);
+
+  background: var(--repo-bg-color);
+}
+
+.repo h1,
+.repo p {
+  margin: 0;
+  font-weight: 300;
+}
+
+.repo .owner {
+  grid-area: owner;
+  color: var(--text-grey);
+  font-size: 1.2rem;
+}
+
+.repo .name {
+  grid-area: name;
+  margin-bottom: 0.5em;
+
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: normal;
+}
+
+.repo .description {
+  grid-area: description;
+
+  font-size: 0.8em;
+}
+
+.repo .version {
+  grid-area: version;
+  color: var(--text-grey);
+  font-family: Inconsolata, monospace;
+}
+
+.repo .changelog {
+  grid-area: changelog;
+  max-height: 8em;
+  padding: 1em;
+  position: relative;
+  overflow-y: hidden;
+}
+
+.repo .changelog::after {
+  content: '';
+  display: block;
+  height: 2em;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(230, 230, 230, 0) 0%,
+                                         rgba(230, 230, 230, 1) 65%,
+                                         rgba(200, 200, 200, 1) 100%);
+}
+
+.repo .changelog a {
+  color: var(--text-grey);
+  text-decoration: none;
+}
+
+.repo .changelog a:hover {
+  color: var(--black);
 }
