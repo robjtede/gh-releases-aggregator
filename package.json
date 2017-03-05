@@ -12,7 +12,8 @@
   "dependencies": {
     "electron": "1.6.1",
     "electron-window-state": "^4.0.2",
-    "github": "^9.1.0"
+    "github": "^9.1.0",
+    "marked": "^0.3.6"
   },
   "author": "",
   "license": "MIT",
