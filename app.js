@@ -1,69 +1,120 @@
 'use strict'
 
-const config = require('./config.json')
+const path = require('path')
+const url = require('url')
+// const querystring = require('querystring')
+const Debug = require('debug')
 
-const Github = require('github')
-const gh = new Github({
-  debug: false,
-  protocol: 'https',
-  host: 'api.github.com',
-  headers: {
-    'user-agent': 'robjte.de:gh-releases-aggregator'
-  },
-  Promise: Promise,
-  followRedirects: false,
-  timeout: 5000
-})
+const {
+  app,
+  Menu,
+  BrowserWindow
+} = require('electron')
 
-gh.authenticate({
-  type: 'oauth',
-  token: config.GITHUB_API_KEY
-})
+// const Config = require('electron-config')
+const windowState = require('electron-window-state')
 
-gh.activity
-  .getStarredReposForUser({
-    username: 'robjtede',
-    sort: 'updated',
-    direction: 'desc',
-    per_page: 100
+// const config = new Config()
+const debug = new Debug('app:app.js')
+
+console.log(`starting ${app.getName()} version ${app.getVersion()}`)
+let mainWindow
+
+const template = [
+  {
+    label: 'Application',
+    submenu: [
+      { role: 'about' },
+      { type: 'separator' },
+      { role: 'hide' },
+      { role: 'hideothers' },
+      { role: 'unhide' },
+      { role: 'quit' }
+    ]
+  }, {
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'selectall' }
+    ]
+  }, {
+    label: 'View',
+    submenu: [
+      { role: 'reload' },
+      { role: 'toggledevtools' },
+      { type: 'separator' },
+      { role: 'zoomin' },
+      { role: 'zoomout' },
+      { role: 'resetzoom' }
+    ]
+  }, {
+    role: 'window',
+    submenu: [
+      { role: 'minimize' },
+      { role: 'close' }
+    ]
+  }, {
+    role: 'help',
+    submenu: [
+      { label: 'Monux GitHub Repo', click: () => require('electron').shell.openExternal('https://github.com/robjtede/monux') },
+      { label: 'Learn More About Electron', click: () => require('electron').shell.openExternal('http://electron.atom.io') }
+    ]
+  }
+]
+
+const createWindow = () => {
+  debug('createWindow')
+
+  const mainWindowState = windowState({
+    defaultWidth: 1000,
+    defaultHeight: 800
   })
-  .then(res => res.data)
-  .then(repos => Promise.all([repos, ...repos.map(repo => {
-    return gh.repos.getReleases({
-      owner: repo.owner.login,
-      repo: repo.name,
-      per_page: 30
-    })
-  })]))
-  .then(([repos, ...releases]) => [repos, releases.map(release => release.data)])
-  .then(([repos, releases]) => repos.map((repo, i) => {
-    repo.releases = releases[i]
-    return repo
+
+  mainWindow = new BrowserWindow({
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    width: mainWindowState.width,
+    height: mainWindowState.height,
+    minWidth: 600,
+    minHeight: 600,
+    // titleBarStyle: 'hidden-inset',
+    webPreferences: {
+      experimentalFeatures: true
+    }
+  })
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+
+  mainWindow.loadURL(url.format({
+    pathname: path.resolve(__dirname, 'app/index.html'),
+    protocol: 'file:',
+    slashes: true
   }))
-  .then(repos => repos.filter(repo => repo.releases.length > 0))
-  .then(repos => {
-    console.log(repos.map(repo => {
-      return {
-        name: repo.full_name,
-        releases: repo.releases.map(release => release.tag_name)
-      }
-    }))
-  })
-  .catch(err => {
-    console.error(err)
-    throw err
-  })
 
-// gh.repos
-//   .getReleases({
-//     owner: 'HackSheffield',
-//     repo: '2016f.hacksheffield.co',
-//     per_page: 30
-//   })
-//   .then(res => {
-//     console.log(res)
-//   })
-//   .catch(err => {
-//     console.error(err)
-//     throw err
-//   })
+  mainWindowState.manage(mainWindow)
+
+  mainWindow.on('closed', () => { mainWindow = null })
+}
+
+app.on('ready', () => {
+  debug('ready event')
+
+  createWindow()
+})
+
+app.on('window-all-closed', () => {
+  debug('window-all-closed event')
+
+  // conflicts with auth strategy
+  // if (process.platform !== 'darwin') app.quit()
+})
+
+app.on('activate', () => {
+  debug('activate event')
+  if (!mainWindow) createWindow()
+})
